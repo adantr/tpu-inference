@@ -23,7 +23,8 @@ from autoresearch import candidate as cfg
 
 
 def digest(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()
+    with path.open("rb") as stream:
+        return hashlib.file_digest(stream, "sha256").hexdigest()
 
 
 def source_hashes(root: Path) -> dict[str, str]:
@@ -58,6 +59,7 @@ def runtime_hashes() -> dict:
                  for p in sorted(vllm.rglob("*.py"))},
         "tokenizer": {p.name: digest(p) for p in tokenizer.iterdir()
                       if p.is_file() and p.suffix in (".json", ".model", ".jinja")},
+        "weights": {p.name: digest(p) for p in tokenizer.glob("*.safetensors")},
         "environment": {k: hashlib.sha256(v.encode()).hexdigest()
                         for k, v in sorted(os.environ.items())
                         if k.startswith(("JAX_", "XLA_", "LIBTPU_", "VLLM_",

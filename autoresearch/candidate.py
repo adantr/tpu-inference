@@ -10,7 +10,8 @@ HARDWARE = "v5e-1"  # GCP accelerator type v5litepod-1.
 ENV = {"USE_BATCHED_RPA_KERNEL": "0", "JAX_PLATFORMS": "tpu",
        "PYTHONDONTWRITEBYTECODE": "1"}
 SERVER = [
-    "vllm", "serve", MODEL, "--revision", MODEL_REVISION,
+    "vllm", "serve", TOKENIZER, "--served-model-name", MODEL,
+    "--revision", MODEL_REVISION,
     "--tokenizer", TOKENIZER, "--dtype", "bfloat16",
     "--tensor-parallel-size", "1", "--max-model-len", "8192",
     "--max-num-seqs", "8", "--max-num-batched-tokens", "2048",
