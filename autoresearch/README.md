@@ -26,11 +26,17 @@ python -m autoresearch.experiment run /opt/tpu-research/evidence/rpa-session att
 python -m autoresearch.experiment compare /opt/tpu-research/evidence/rpa-session attempt-001
 ```
 
-`freeze` requires the exact upstream baseline kernel. It saves that source,
-commands, workload, settings, and source/runtime hashes. `screen` measures one
-baseline/candidate pair on the preselected discovery workload, without the full
-correctness suite. Its verdict is always `screen_only` or a failure; it cannot
-establish correctness or a winner. `run` preserves the
+Set `SCREEN_REFERENCE` to a completed baseline variant from an earlier session.
+`freeze` requires the exact upstream baseline kernel and checks the saved
+baseline's runtime, inference source, serving settings and workload. It copies
+and hashes that reference. A workflow change starts a new session; old trials
+keep their original rules.
+
+`screen` starts only the candidate server. It tests short batched prompts first,
+then short single-request, medium and long prompts on that same server. Any
+negative metric stops the trial; an initial case without a 1% gain also stops.
+The saved baseline is never restarted during this stage. `screen_pass` is only
+feedback: runtime drift still requires fresh balanced measurements. `run` preserves the
 candidate, swaps the actual kernel while servers are stopped, runs the fixed
 TPU reference/KV-cache check, and collects four balanced baseline/candidate pairs.
 Every run starts a fresh server and client, reuses the official vLLM CLI imports across workloads, and discards a full workload pass before timing.

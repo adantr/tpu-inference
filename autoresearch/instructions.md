@@ -24,10 +24,15 @@ For each attempt:
 3. Edit only the real whitelisted `kernel.py`. Keep at most 40 added/deleted lines
    against the fixed base. Do not rename existing ABI names or introduce new
    leading-underscore names. `candidate.py` remains frozen settings.
-4. Run `screen` with a new attempt name for the modest serving-only signal.
-   Inspect its metrics and retain failures as well as faster results. Run the
-   full `run` command only for a promising candidate; `screen_only` is never
-   acceptance. Both stages and their workload subsets are frozen in advance.
+4. Run `screen` with a new attempt name. Reuse the frozen compatible baseline,
+   start only the candidate server, and test short context at concurrency eight
+   first. Any negative metric stops the trial. A short batched case without a
+   1% gain also stops it. Passing cases advance to short single-request, medium,
+   and long context on the same server. Retain every result and failure. Run the
+   full `run` command only after all stages pass; `screen_pass` is not acceptance.
+   Freeze a new session when changing the workflow; never rescore an old trial
+   under new rules. The final balanced comparison keeps its original zero-
+   regression criterion.
 5. Investigate `invalid` or `inconclusive` outcomes. Do not pool only favorable
    repeats, change the workload, raise regression allowances, omit a metric,
    reduce output length, or declare a winner from one run. A new fixed protocol

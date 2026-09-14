@@ -33,7 +33,9 @@ WORKLOADS = {
                                      "--max-concurrency", str(concurrency)]
     for length in (256, 2048, 4096) for concurrency in (1, 8)
 }
-SCREEN_WORKLOADS = ["context256-c8", "context2048-c8"]
+SCREEN_WORKLOADS = [f"context{length}-c{concurrency}"
+                    for length in (256, 2048, 4096) for concurrency in (8, 1)]
+SCREEN_REFERENCE = "/opt/tpu-research/evidence/rpa-session-b/tile2048-full/00-baseline"
 # Set to the focused real-DECODE pytest command before freeze. The driver appends
 # --junitxml=PATH. Its source is frozen even when located outside tpu-inference.
 CORRECTNESS = ["python", "-m", "pytest", "-q", "-o", "junit_family=xunit1",

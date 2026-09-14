@@ -35,9 +35,17 @@
   ignored, prefix caching disabled. Confirm these settings fit the selected TPU
   and freeze them before edits. Fixed vLLM source, tokenizer, seed, and arguments
   define the saved random workload; per-request lengths must remain identical.
-  The cheap `screen` stage uses contexts 256 and 2048 at concurrency 8 and one
-  pair; its output is feedback only. The full gate uses all six fixed workloads.
+  The cheap `screen` stage reuses a frozen, compatible serving baseline and starts
+  only the candidate server. Test context 256 at concurrency 8, then 1; proceed
+  to context 2048 and 4096 only after earlier cases have no regressing metric.
+  Require a 1% gain in at least one metric in the first short batched case.
+  Stop immediately on any regression or insufficient initial gain. Keep one
+  server for all passing stages. Saved-baseline screens are feedback only and
+  cannot establish a final performance claim or rule out runtime drift.
 - Primary feedback: detailed JSON from the installed `vllm bench serve` command.
+  Reserve full correctness checks and fresh balanced comparisons for candidates
+  that pass every cheap stage; use an earlier focused check when a new memory
+  or synchronization change warrants it.
   Baseline and candidate get fresh servers and full discarded warmup passes,
   in four pairs ordered AB, BA, AB, BA. All runs and failures remain available.
 - Selected metrics: output-token throughput (higher is better); mean, median
