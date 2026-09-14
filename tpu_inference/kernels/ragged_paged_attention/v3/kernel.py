@@ -598,9 +598,7 @@ def _ragged_paged_attention_kernel_loop(
             # Make sure the current bkv buffer is safe to overwrite.
             wait_update_kv_cache(bkv_sem_idx)
 
-            # Fetch effective kv from kv cache. To pipeline multiple DMA calls, we
-            # utilize static for loop instead of dynamic for loop.
-            for i in range(bkv_p):
+            def fetch_cached_page(i):
                 # Ensure only effective kvs are copied.
                 sz = jnp.clip(kv_left_frm_cache - i * page_size, 0, page_size)
                 # If the page index is out of bound, we set page_idx to the last page.
@@ -615,6 +613,12 @@ def _ragged_paged_attention_kernel_loop(
                     wait=False,
                 )
                 debug_print("[RPA debug] loop_body i={}, sz={}", i, sz)
+
+            # Fresh prompts have no cached KV; retain decode's unrolled path.
+            @pl.when(case == RpaCase.DECODE or bkv_sz_frm_cache > 0)
+            def fetch_cached_pages():
+                for i in range(bkv_p):
+                    fetch_cached_page(i)
 
             new_kv_len_start = q_end - kv_left_frm_new
             debug_print("[RPA debug] new_kv_len_start={}", new_kv_len_start)
