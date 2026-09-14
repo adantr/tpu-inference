@@ -1,1 +1,2 @@
 utc_time	candidate_sha256	verdict	attempt_directory	best_gain	worst_gain	hypothesis	lowering_evidence	correctness	confirmation	decision	next_question
+2026-09-14T12:36:00.912003+00:00	40281e0a673dfae1f11fc1bfa921d74296ef1bf1239c435402505c5f6e7d9df9	screen_only	rpa-session-b/tile1024-screen	0.10897723933771286	-0.1966548666439929	1024 compute tile reduces padded decode work	baseline XProf: 4096/4096; candidate profile pending	candidate not tested	not run	not retained: short-context TTFT regressed in screen	does a 2048 tile avoid the tradeoff?
