@@ -1558,8 +1558,8 @@ def get_default_block_sizes(
             and q_dtype == jnp.bfloat16 and kv_dtype == jnp.bfloat16
             and page_size == 256 and pltpu.get_tpu_info().is_lite):
         if case == RpaCase.DECODE and bkv_sz % 2048 == 0:
-            bkv_sz = min(bkv_sz, 2048)
-            bkv_csz = min(bkv_csz, 2048)
+            bkv_sz = min(bkv_sz, 1024)
+            bkv_csz = min(bkv_csz, 1024)
         elif case != RpaCase.DECODE:
             bq_sz = min(256, max_q)
             bq_csz = bq_sz
