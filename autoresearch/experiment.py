@@ -33,7 +33,8 @@ def source_hashes(root: Path) -> dict[str, str]:
                             (".git", ".venv", "__pycache__", ".pytest_cache"))
         for name in sorted(files):
             path = Path(directory) / name
-            if path != root / cfg.KERNEL and path.suffix != ".pyc":
+            if (path not in (root / cfg.KERNEL, root / "autoresearch/results.tsv")
+                    and path.suffix != ".pyc"):
                 hashes[str(path.relative_to(root))] = digest(path)
     return hashes
 
