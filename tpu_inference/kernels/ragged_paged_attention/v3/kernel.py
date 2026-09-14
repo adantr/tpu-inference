@@ -598,6 +598,8 @@ def _ragged_paged_attention_kernel_loop(
             # Make sure the current bkv buffer is safe to overwrite.
             wait_update_kv_cache(bkv_sem_idx)
 
+            # Fetch effective kv from kv cache. To pipeline multiple DMA calls, we
+            # utilize static for loop instead of dynamic for loop.
             for i in range(bkv_p):
                 # Ensure only effective kvs are copied.
                 sz = jnp.clip(kv_left_frm_cache - i * page_size, 0, page_size)
