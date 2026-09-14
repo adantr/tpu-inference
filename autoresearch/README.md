@@ -33,7 +33,7 @@ correctness suite. Its verdict is always `screen_only` or a failure; it cannot
 establish correctness or a winner. `run` preserves the
 candidate, swaps the actual kernel while servers are stopped, runs the fixed
 TPU reference/KV-cache check, and collects four balanced baseline/candidate pairs.
-Every run starts a fresh server and discards a full workload pass before timing.
+Every run starts a fresh server and client, reuses the official vLLM CLI imports across workloads, and discards a full workload pass before timing.
 All commands, server logs, detailed vLLM JSONs, test reports, and source hashes
 remain in the session directory. Run directories cannot be overwritten.
 

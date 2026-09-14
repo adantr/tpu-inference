@@ -105,14 +105,11 @@ def serving_run(root: Path, env: dict, directory: Path, screen: bool) -> None:
                             break
                 except URLError:
                     time.sleep(1)
-            workloads = cfg.SCREEN_WORKLOADS if screen else cfg.WORKLOADS
-            for workload in workloads:
-                # A complete discarded pass warms all selected traffic/compile shapes.
-                for phase in ("warmup", "measured"):
-                    name = f"{workload}-{phase}"
-                    command = cfg.BENCH + cfg.WORKLOADS[workload] + [
-                        "--result-dir", str(directory), "--result-filename", name + ".json"]
-                    run_logged(command, root, env, directory / (name + ".log"))
+            # Reuse CLI imports; each official benchmark call still gets fresh args
+            # and its own warmup/measurement. Import time is never a serving metric.
+            run_logged([sys.executable, "-m", "autoresearch.experiment", "client",
+                        str(directory), "screen" if screen else "full"],
+                       Path(__file__).resolve().parent.parent, env, directory / "client.log")
             if server.poll() is not None:
                 raise RuntimeError("server exited during measurement")
         finally:
@@ -129,6 +126,21 @@ def serving_run(root: Path, env: dict, directory: Path, screen: bool) -> None:
                 except ProcessLookupError:
                     pass
                 server.wait()
+
+
+
+def client(directory: Path, screen: bool) -> None:
+    from vllm.entrypoints.cli.main import main as vllm_main
+
+    for workload in (cfg.SCREEN_WORKLOADS if screen else cfg.WORKLOADS):
+        for phase in ("warmup", "measured"):
+            name = f"{workload}-{phase}"
+            command = cfg.BENCH + cfg.WORKLOADS[workload] + [
+                "--result-dir", str(directory), "--result-filename", name + ".json"]
+            (directory / (name + ".command.json")).write_text(json.dumps(command, indent=2))
+            print("Benchmark command:", json.dumps(command), flush=True)
+            sys.argv = command
+            vllm_main()
 
 
 def benchmark(path: Path) -> dict:
@@ -200,6 +212,11 @@ def compare(directory: Path, screen: bool = False) -> dict:
 
 
 def main(arguments: list[str]) -> None:
+    if len(arguments) == 3 and arguments[0] == "client":
+        if arguments[2] not in ("screen", "full"):
+            raise ValueError("unknown client workload selection")
+        client(Path(arguments[1]), arguments[2] == "screen")
+        return
     if not arguments or len(arguments) != (2 if arguments[0] == "freeze" else 3):
         raise ValueError("use: freeze SESSION | screen/run/compare SESSION ATTEMPT")
     mode, session = arguments[0], Path(arguments[1]).resolve()
