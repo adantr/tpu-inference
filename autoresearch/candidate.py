@@ -7,7 +7,7 @@ MODEL = "Qwen/Qwen3-4B"
 MODEL_REVISION = "1cfa9a7208912126459214e8b04321603b3df60c"
 TOKENIZER = "/opt/tpu-research/models/qwen3-4b"
 HARDWARE = "v5e-1"  # GCP accelerator type v5litepod-1.
-ENV = {"USE_BATCHED_RPA_KERNEL": "0", "JAX_PLATFORMS": "tpu",
+ENV = {"USE_BATCHED_RPA_KERNEL": "0", "JAX_PLATFORMS": "tpu,cpu",
        "PYTHONDONTWRITEBYTECODE": "1"}
 SERVER = [
     "vllm", "serve", TOKENIZER, "--served-model-name", MODEL,
