@@ -12,7 +12,7 @@ from tpu_inference.kernels.ragged_paged_attention.v3.kernel import (
 
 
 @pytest.mark.parametrize("capacity", [7936, 8192])
-@pytest.mark.parametrize("pattern", ["normal", "sharp", "zeros"])
+@pytest.mark.parametrize("pattern", ["normal", "sharp", "zeros", "window", "softcap"])
 @pytest.mark.parametrize("mode", ["decode", "prefill", "mixed"])
 def test_attention_reference_and_cache(capacity, pattern, mode, record_property):
     assert jax.default_backend() == "tpu", "real TPU execution is required"
@@ -70,11 +70,15 @@ def test_attention_reference_and_cache(capacity, pattern, mode, record_property)
             jnp.asarray(distribution, dtype=jnp.int32),
         )
 
+    options = dict(sm_scale=head_dim ** -0.5,
+                   sliding_window=128 if pattern == "window" else None,
+                   soft_cap=5.0 if pattern == "softcap" else None)
+    routing = dict(chunk_prefill_size=128 if mode != "decode" else None)
+    # FP32 reference scores avoid rounding the dot product before scaling it.
     expected, expected_cache = ref_ragged_paged_attention(
-        *inputs(), sm_scale=head_dim ** -0.5, out_dtype=jnp.float32)
+        *inputs(), **options, out_dtype=jnp.float32)
     output, updated_cache = jax.block_until_ready(
-        ragged_paged_attention(*inputs(), sm_scale=head_dim ** -0.5,
-                              chunk_prefill_size=128 if mode != "decode" else None))
+        ragged_paged_attention(*inputs(), **options, **routing))
     expected = np.asarray(expected, dtype=np.float32)
     actual = np.asarray(output[:sum(query_lengths)], dtype=np.float32)
     assert np.isfinite(expected).all() and np.isfinite(actual).all()
@@ -84,3 +88,15 @@ def test_attention_reference_and_cache(capacity, pattern, mode, record_property)
     np.testing.assert_allclose(actual, expected, atol=0.02, rtol=0.02)
     np.testing.assert_array_equal(np.asarray(updated_cache).view(np.uint16),
                                   np.asarray(expected_cache).view(np.uint16))
+    if pattern == "normal":
+        # Shared layers must ignore their supplied K/V and leave all cache bits alone.
+        shared_inputs = list(inputs())
+        shared_inputs[1] = jnp.full_like(shared_inputs[1], jnp.nan)
+        shared_inputs[2] = jnp.full_like(shared_inputs[2], jnp.nan)
+        shared_inputs[3] = jnp.array(np.asarray(expected_cache))
+        shared, shared_cache = jax.block_until_ready(ragged_paged_attention(
+            *shared_inputs, **options, **routing, update_kv_cache=False))
+        np.testing.assert_array_equal(np.asarray(shared[:sum(query_lengths)]),
+                                      np.asarray(output[:sum(query_lengths)]))
+        np.testing.assert_array_equal(np.asarray(shared_cache).view(np.uint16),
+                                      np.asarray(expected_cache).view(np.uint16))
