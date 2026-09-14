@@ -14,7 +14,7 @@ SERVER = [
     "--tokenizer", TOKENIZER, "--dtype", "bfloat16",
     "--tensor-parallel-size", "1", "--max-model-len", "8192",
     "--max-num-seqs", "8", "--max-num-batched-tokens", "2048",
-    "--no-enable-prefix-caching", "--disable-log-requests",
+    "--no-enable-prefix-caching",
     "--host", "127.0.0.1", "--port", "8000",
 ]
 BENCH = [
