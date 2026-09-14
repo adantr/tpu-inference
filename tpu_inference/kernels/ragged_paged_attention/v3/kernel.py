@@ -687,10 +687,10 @@ def _ragged_paged_attention_kernel_loop(
         if not wait:
             lax.fori_loop(
                 0,
-                1 if case == RpaCase.DECODE else kv_p_end - kv_p_start,
+                kv_p_end - kv_p_start,
                 loop_body,
                 (update_sz, ignore),  # total transfer size
-                unroll=case == RpaCase.DECODE,
+                unroll=False,
             )
         else:
             dst = cache_hbm_ref.at[pl.ds(0, update_sz)]
@@ -1536,6 +1536,7 @@ def get_default_block_sizes(
                         and q_dtype == jnp.bfloat16 and kv_dtype == jnp.bfloat16
                         and page_size == 256 and bkv_sz % 2048 == 0
                         and pltpu.get_tpu_info().is_lite):
+                    bkv_sz = min(bkv_sz, 2048)
                     bkv_csz = min(bkv_csz, 2048)
             else:
                 bq_sz = min(1024 // num_q_heads_per_kv_head, max_q // 2)
