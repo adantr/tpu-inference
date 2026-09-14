@@ -53,6 +53,7 @@ def runtime_hashes() -> dict:
     return {
         "device": device,
         "python": sys.executable,
+        "host_id": Path("/etc/machine-id").read_text().strip(),
         "vllm_entrypoint": digest(Path(shutil.which("vllm"))),
         "packages": sorted([d.metadata["Name"], d.version] for d in distributions()),
         "vllm": {str(p.relative_to(vllm)): digest(p)
