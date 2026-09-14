@@ -1561,6 +1561,8 @@ def get_default_block_sizes(
             bkv_sz = min(bkv_sz, 2048)
             bkv_csz = min(bkv_csz, 2048)
         elif case != RpaCase.DECODE:
+            bq_sz = min(256, max_q)
+            bq_csz = bq_sz
             bkv_csz = min(bkv_csz, 256)
 
     return {
