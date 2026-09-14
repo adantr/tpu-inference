@@ -1532,6 +1532,13 @@ def get_default_block_sizes(
                 bkv_sz = min(min_bkv_sz_to_peak, max_kv)
                 bq_csz = 1
                 bkv_csz = min(min_bkv_sz_to_peak, max_kv)
+                # Bound padded decode work for this v5e attention shape.
+                if (tpu_version == 5 and actual_num_q_heads == 32
+                        and actual_num_kv_heads == 8 and head_dim == 128
+                        and q_dtype == jnp.bfloat16 and kv_dtype == jnp.bfloat16
+                        and page_size == 256 and bkv_sz % 1024 == 0
+                        and pltpu.get_tpu_info().is_lite):
+                    bkv_csz = min(bkv_csz, 1024)
             else:
                 bq_sz = min(1024 // num_q_heads_per_kv_head, max_q // 2)
                 bkv_sz = min(1024, max_kv)
