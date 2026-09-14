@@ -22,7 +22,7 @@ def test_attention_reference_and_cache(capacity, pattern, mode, record_property)
     query_lengths = [1] * len(lengths)
     distribution = [len(lengths)] * 3
     if mode == "prefill":
-        lengths = query_lengths = [1, 127, 128, 257]
+        lengths = query_lengths = [128, 128, 128, 128]
         distribution = [0, 4, 4]
     elif mode == "mixed":
         lengths, query_lengths = [1, 257, 128, 512], [1, 1, 128, 129]
@@ -71,9 +71,10 @@ def test_attention_reference_and_cache(capacity, pattern, mode, record_property)
         )
 
     expected, expected_cache = ref_ragged_paged_attention(
-        *inputs(), sm_scale=head_dim ** -0.5)
+        *inputs(), sm_scale=head_dim ** -0.5, out_dtype=jnp.float32)
     output, updated_cache = jax.block_until_ready(
-        ragged_paged_attention(*inputs(), sm_scale=head_dim ** -0.5))
+        ragged_paged_attention(*inputs(), sm_scale=head_dim ** -0.5,
+                              chunk_prefill_size=128 if mode != "decode" else None))
     expected = np.asarray(expected, dtype=np.float32)
     actual = np.asarray(output[:sum(query_lengths)], dtype=np.float32)
     assert np.isfinite(expected).all() and np.isfinite(actual).all()

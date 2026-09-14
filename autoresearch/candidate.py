@@ -35,7 +35,8 @@ WORKLOADS = {
 SCREEN_WORKLOADS = ["context256-c8", "context2048-c8"]
 # Set to the focused real-DECODE pytest command before freeze. The driver appends
 # --junitxml=PATH. Its source is frozen even when located outside tpu-inference.
-CORRECTNESS = ["python", "-m", "pytest", "-q", "autoresearch/verify_rpa.py"]
+CORRECTNESS = ["python", "-m", "pytest", "-q", "-o", "junit_family=xunit1",
+               "autoresearch/verify_rpa.py"]
 METRICS = {"output_throughput": 1} | {
     f"{stat}_{metric}_ms": -1
     for metric in ("ttft", "tpot", "itl", "e2el")
