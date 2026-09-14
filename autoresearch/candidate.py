@@ -22,7 +22,7 @@ BENCH = [
     "vllm", "bench", "serve", "--backend", "vllm", "--model", MODEL,
     "--tokenizer", TOKENIZER, "--base-url", "http://127.0.0.1:8000",
     "--endpoint", "/v1/completions", "--dataset-name", "random",
-    "--random-range-ratio", "1", "--num-prompts", "16",
+    "--random-range-ratio", "0", "--num-prompts", "16",
     "--random-output-len", "128", "--request-rate", "inf",
     "--seed", "42", "--temperature", "0",
     "--ignore-eos", "--num-warmups", "8", "--save-result", "--save-detailed",
