@@ -10,7 +10,7 @@ read `problem.md`, and finalize the settings in `candidate.py`, including the
 focused real-DECODE correctness command. That file holds
 settings only. The editable candidate is
 `tpu_inference/kernels/ragged_paged_attention/v3/kernel.py` in the real checkout.
-Pin the model revision and download its tokenizer to the local `TOKENIZER` path.
+Download the pinned model snapshot, including weights and tokenizer, to the local `TOKENIZER` path. The server reads this snapshot and its weight hashes are frozen.
 Validate the saved commands and workload fit before freezing; hardware execution
 and workload finalization have not been performed by this template.
 
